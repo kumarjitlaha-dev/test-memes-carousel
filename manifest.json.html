@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SFW Meme Carousel - Click to Reveal</title>
+  <!-- Coursera Connect SDK -->
+  <script src="https://www.coursera.org/widget/coursera-widget-connect-v0.js"></script>
+  <style>
+    :root {
+      --primary: #0056d2;
+      --primary-hover: #00419e;
+      --bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-main: #1f1f1f;
+      --text-muted: #5e6c84;
+      --border: #dfe1e6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .plugin-container {
+      width: 100%;
+      max-width: 860px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .progress-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: #e8f1ff;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* Carousel Viewport */
+    .carousel-viewport {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      width: 100%;
+    }
+
+    .slide {
+      min-width: 100%;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 680px) {
+      .slide {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Side: Meme Image Card */
+    .image-panel {
+      background: #f0f2f5;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      min-height: 290px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .image-panel:hover {
+      box-shadow: 0 4px 10px rgba(0, 86, 210, 0.15);
+      border-color: var(--primary);
+    }
+
+    .image-panel img {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+
+    .meme-caption-tag {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      text-align: center;
+    }
+
+    /* Right Side: Click-to-Reveal Panel */
+    .reveal-panel {
+      border: 2px dashed #b3c7e6;
+      border-radius: 8px;
+      background: #f8fbff;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      min-height: 290px;
+    }
+
+    .reveal-panel.revealed {
+      border: 1px solid var(--border);
+      background: #ffffff;
+      align-items: flex-start;
+      text-align: left;
+      cursor: default;
+    }
+
+    .reveal-prompt-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .reveal-prompt-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .reveal-prompt-sub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .revealed-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .reveal-panel.revealed .revealed-content {
+      display: block;
+    }
+
+    .reveal-panel.revealed .prompt-state {
+      display: none;
+    }
+
+    .revealed-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #0f7b3e;
+      background: #e3f7ec;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .revealed-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .revealed-content p {
+      font-size: 0.96rem;
+      line-height: 1.55;
+      color: #333333;
+      margin-bottom: 12px;
+    }
+
+    .use-case {
+      font-size: 0.88rem;
+      background: #f4f5f7;
+      padding: 10px 12px;
+      border-left: 3px solid var(--primary);
+      border-radius: 4px;
+      color: var(--text-main);
+    }
+
+    /* Footer Navigation */
+    .controls {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: #fafbfc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .nav-btn:disabled {
+      background: #cbd2d9;
+      cursor: not-allowed;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd2d9;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .dot.active {
+      background: var(--primary);
+      transform: scale(1.2);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="plugin-container" id="app">
+    <div class="header">
+      <h2>Internet Culture 101: 7 Safe-for-Work Memes</h2>
+      <span class="progress-badge" id="progressText">Revealed: 0 / 7</span>
+    </div>
+
+    <div class="carousel-viewport">
+      <div class="carousel-track" id="carouselTrack"></div>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" id="prevBtn" disabled>← Previous</button>
+      <div class="dots" id="dotsContainer"></div>
+      <button class="nav-btn" id="nextBtn">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    // 7 Most Popular Safe-for-Work Memes with verified open-source Imgflip template IDs & descriptions
+    const memeItems = [
+      {
+        id: "112126428",
+        title: "Distracted Boyfriend",
+        fallbackUrl: "https://i.imgflip.com/1ur9b0.jpg",
+        description: "A stock photograph showing a man looking at another woman while his partner looks on in disapproval.",
+        usage: "Commonly used to illustrate shifting attention away from a reliable current priority toward a shiny new distraction."
+      },
+      {
+        id: "181913649",
+        title: "Drake Hotline Bling",
+        fallbackUrl: "https://i.imgflip.com/30b1gx.jpg",
+        description: "A two-panel reaction template contrasting rejection in the top frame with enthusiastic approval in the bottom frame.",
+        usage: "Used to compare an outdated or inefficient method against a clearly superior alternative."
+      },
+      {
+        id: "87743020",
+        title: "Two Buttons",
+        fallbackUrl: "https://i.imgflip.com/1g8my4.jpg",
+        description: "An illustration of a character sweating anxiously while trying to decide between two red buttons.",
+        usage: "Represents a humorous dilemma where two conflicting choices or principles cannot both be satisfied."
+      },
+      {
+        id: "129242436",
+        title: "Change My Mind",
+        fallbackUrl: "https://i.imgflip.com/24y43o.jpg",
+        description: "A person sitting casually at an outdoor table with a mug and a sign inviting friendly debate.",
+        usage: "Used to state a bold, lighthearted, or slightly controversial opinion while inviting others to challenge it."
+      },
+      {
+        id: "55311130",
+        title: "This Is Fine",
+        fallbackUrl: "https://i.imgflip.com/wxica.jpg",
+        description: "A cartoon dog sitting calmly with a cup of coffee inside a room engulfed in flames.",
+        usage: "Depicts maintaining artificial calm or denial in the middle of an overwhelming workplace or project crisis."
+      },
+      {
+        id: "188390779",
+        title: "Woman Yelling at a Cat",
+        fallbackUrl: "https://i.imgflip.com/345v97.jpg",
+        description: "A split-screen pairing a dramatic, emotional accusation on the left with a confused cat sitting at a dinner table on the right.",
+        usage: "Highlights absurd misunderstandings or overreactions met with complete bewilderment."
+      },
+      {
+        id: "61544",
+        title: "Success Kid",
+        fallbackUrl: "https://i.imgflip.com/1bhk.jpg",
+        description: "A toddler on a beach clenching a fist with a determined, victorious expression.",
+        usage: "Used to celebrate small everyday victories, such as code compiling on the first try or finishing ahead of schedule."
+      }
+    ];
+
+    let currentIndex = 0;
+    const revealedSet = new Set();
+
+    const track = document.getElementById("carouselTrack");
+    const dotsContainer = document.getElementById("dotsContainer");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const progressText = document.getElementById("progressText");
+
+    // Fetch live URLs from Imgflip's open public endpoint, falling back gracefully
+    async function loadMemeImages() {
+      try {
+        const res = await fetch("https://api.imgflip.com/get_memes");
+        const json = await res.json();
+        if (json.success && json.data && Array.isArray(json.data.memes)) {
+          const apiMap = new Map(json.data.memes.map(m => [m.id, m.url]));
+          memeItems.forEach(item => {
+            if (apiMap.has(item.id)) {
+              item.imageUrl = apiMap.get(item.id);
+            } else {
+              item.imageUrl = item.fallbackUrl;
+            }
+          });
+        } else {
+          memeItems.forEach(item => item.imageUrl = item.fallbackUrl);
+        }
+      } catch (e) {
+        memeItems.forEach(item => item.imageUrl = item.fallbackUrl);
+      }
+      renderCarousel();
+    }
+
+    function renderCarousel() {
+      track.innerHTML = "";
+      dotsContainer.innerHTML = "";
+
+      memeItems.forEach((item, index) => {
+        // Build Slide
+        const slide = document.createElement("div");
+        slide.className = "slide";
+
+        // Left: Image Card
+        const imgPanel = document.createElement("div");
+        imgPanel.className = "image-panel";
+        imgPanel.title = "Click to reveal description";
+        imgPanel.innerHTML = `
+          <img src="${item.imageUrl}" alt="${item.title}" />
+          <div class="meme-caption-tag">#${index + 1}: ${item.title}</div>
+        `;
+
+        // Right: Click-to-Reveal Card
+        const revealPanel = document.createElement("div");
+        revealPanel.className = "reveal-panel" + (revealedSet.has(index) ? " revealed" : "");
+        revealPanel.id = `reveal-${index}`;
+        revealPanel.innerHTML = `
+          <div class="prompt-state">
+            <div class="reveal-prompt-icon">?</div>
+            <div class="reveal-prompt-title">Click Image or Here to Reveal</div>
+            <div class="reveal-prompt-sub">Uncover what the "${item.title}" meme means</div>
+          </div>
+          <div class="revealed-content">
+            <span class="revealed-label">Revealed Explanation</span>
+            <h3>${item.title}</h3>
+            <p>${item.description}</p>
+            <div class="use-case"><strong>Common Context:</strong> ${item.usage}</div>
+          </div>
+        `;
+
+        const handleReveal = () => {
+          if (!revealedSet.has(index)) {
+            revealedSet.add(index);
+            revealPanel.classList.add("revealed");
+            updateProgress();
+          }
+        };
+
+        imgPanel.addEventListener("click", handleReveal);
+        revealPanel.addEventListener("click", handleReveal);
+
+        slide.appendChild(imgPanel);
+        slide.appendChild(revealPanel);
+        track.appendChild(slide);
+
+        // Build Pagination Dot
+        const dot = document.createElement("button");
+        dot.className = "dot" + (index === currentIndex ? " active" : "");
+        dot.setAttribute("aria-label", `Go to slide ${index + 1}`);
+        dot.addEventListener("click", () => goToSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+
+      updateCarouselPosition();
+      notifyCourseraResize();
+    }
+
+    function goToSlide(index) {
+      currentIndex = Math.max(0, Math.min(memeItems.length - 1, index));
+      updateCarouselPosition();
+    }
+
+    function updateCarouselPosition() {
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === memeItems.length - 1;
+
+      const dots = dotsContainer.querySelectorAll(".dot");
+      dots.forEach((d, idx) => d.classList.toggle("active", idx === currentIndex));
+      notifyCourseraResize();
+    }
+
+    function updateProgress() {
+      progressText.textContent = `Revealed: ${revealedSet.size} / ${memeItems.length}`;
+      // Report completion to Coursera once all 7 are revealed
+      if (revealedSet.size === memeItems.length && window.courseraApi) {
+        try {
+          window.courseraApi.callMethod({
+            type: "SET_ANSWER",
+            data: { completed: true, score: 1 }
+          });
+        } catch (err) {
+          console.log("Coursera API optional callback:", err);
+        }
+      }
+    }
+
+    function notifyCourseraResize() {
+      if (window.courseraApi) {
+        try {
+          const height = document.getElementById("app").offsetHeight + 40;
+          window.courseraApi.callMethod({
+            type: "SET_HEIGHT",
+            data: { height: height }
+          });
+        } catch (err) {
+          // Safe fallback when previewed outside Coursera iframe
+        }
+      }
+    }
+
+    prevBtn.addEventListener("click", () => goToSlide(currentIndex - 1));
+    nextBtn.addEventListener("click", () => goToSlide(currentIndex + 1));
+
+    // Initialize Coursera Connect handshake if running inside Coursera / Simulator
+    window.addEventListener("load", () => {
+      if (window.courseraApi) {
+        try {
+          window.courseraApi.callMethod({
+            type: "GET_SESSION_CONFIGURATION",
+            onSuccess: () => loadMemeImages(),
+            onError: () => loadMemeImages()
+          });
+        } catch (e) {
+          loadMemeImages();
+        }
+      } else {
+        loadMemeImages();
+      }
+    });
+  </script>
+</body>
+</html>
